@@ -6,15 +6,13 @@ from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-# إجبار فيرسل على قراءة المسار الرئيسي لرؤية مجلد vipertls
+# إجبار فيرسل على قراءة المسار الرئيسي
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# استدعاء عميل الـ AsyncClient الصافي برمجياً بدون المرور بملفات المتصفح الخفي
 from vipertls.client import AsyncClient
 
 app = FastAPI(title="ViperSolverr Cloud Pure TLS", docs_url="/docs", openapi_url="/openapi.json")
 
-# بناء نفس هيكل البيانات المطلوب لإضافة ستريميو
 class SolveRequest(BaseModel):
     url: str
     user_agent: Optional[str] = None
@@ -43,7 +41,6 @@ async def solve(req: SolveRequest) -> SolveResponse:
     }
     
     try:
-        # تنفيذ الطلب بتزوير البصمة برمجياً عبر الـ Core الصافي للأداة
         async with AsyncClient(impersonate=req.preset, timeout=req.timeout) as client:
             r = await client.get(req.url, headers=headers)
             elapsed = (time.perf_counter() - t0) * 1000
@@ -52,7 +49,7 @@ async def solve(req: SolveRequest) -> SolveResponse:
                 url=str(r.url),
                 status=r.status_code,
                 html=r.content.decode('utf-8', errors='ignore'),
-                cookies={},  # في وضع الـ Pure TLS تتم إدارة الجلسة ديناميكياً
+                cookies={},
                 user_agent=ua,
                 method="pure_tls_cloud",
                 elapsed_ms=elapsed
